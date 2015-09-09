@@ -1,6 +1,7 @@
 package graphite.relay.backend.strategy
 
-import java.util.zip.CRC32
+import java.security.MessageDigest
+import java.nio.ByteBuffer
 import javax.inject.Inject
 import javax.inject.Named
 import scala.collection.SortedMap
@@ -37,9 +38,10 @@ class ConsistentHash @Inject() (backends: Backends,
     * at least it will make this method thread safe. Since it's in the tight
     * look, it may need a set of eyes later on. */
   private def hash(string: String): Long = {
-    val hasher = new CRC32()
-    hasher.update(string.getBytes)
-    return hasher.getValue
+    val hasher = MessageDigest.getInstance("MD5")
+    val bytes = hasher.digest(string.getBytes)
+    val wrapped = ByteBuffer.wrap({bytes[0], bytes[1]})
+    return wrapped.getShort()
   }
 
   /** Initialize the hashing circle basted on the backends this class was
